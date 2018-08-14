@@ -284,24 +284,20 @@ const options = {
 
 export class TextPath extends LineString {
 	_paintOn(ctx, points, lineOpacity, fillOpacity, dasharray) {
-		delDuplicatePt(points);		//  paint smoothline error when adjacent-points duplicate
-		if (this.options['textName']){
-			let fontSize = this.options["fontSize"];
-			if(this.options["fontSize"].indexOf("px") != -1){
-				fontSize = this.options["fontSize"];
-			}
-			else if(this.options["fontSize"].indexOf("m") != -1){
-				const index = this.options["fontSize"].indexOf("m");
-				const size = parseFloat(this.options["fontSize"].substring(0, index));
-				const scale = this.getMap().getScale();
-				fontSize = size/scale;
-				if(fontSize < this.options['textStrokeMin']) return;
-				fontSize += "px";
-			}
-			
+	//  paint smoothline error when adjacent-points duplicate
+
+		const symbol = this.getSymbol()
+
+		if (symbol && symbol['textPathSize']){
+            delDuplicatePt(points);
+
+            const scale = this.getMap().getScale();
+            let fontSize = parseInt(symbol['textPathSize']/scale);
+			if(fontSize < 3 || fontSize > 1000) return;
+			fontSize += "px";
+
 			const font = fontSize + " " + this.options["fontFamily"];
-			this._paintPolylineTextPath(ctx, points, this.options['textName'], font, 
-				this.options["symbol"]['lineColor'],
+			this._paintPolylineTextPath(ctx, points, this.options['textName'], font,
 				this.options["symbol"]['lineWidth'],
 				lineOpacity
 			);
@@ -311,18 +307,17 @@ export class TextPath extends LineString {
 		}
     }
 	
-	_paintPolylineTextPath(ctx, points, text, font,	lineColor, lineWidth, lineOpacity){
+	_paintPolylineTextPath(ctx, points, text, font,	lineColor, lineOpacity){
 		// Render text
 		ctx.font = font;
-		ctx.strokeStyle = lineColor;
-		ctx.lineWidth = lineWidth || 3;
+		ctx.strokeStyle = 'rgba(0,0,0,0)';
+		ctx.lineWidth = 0;
 		ctx.globalAlpha = lineOpacity;
 		
-		ctx.textAlign = this.options['textAlign'];
-		ctx.textBaseline = this.options['textBaseline'];
-		ctx.textOverflow = this.options['textOverflow'];
-		ctx.textJustify = this.options['textJustify'];
-		ctx.textStrokeMin = this.options['textStrokeMin'];
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.textOverflow = "visible";
+		ctx.textJustify = true;
 
 		let path = [];
 		let len = points.length;

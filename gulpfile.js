@@ -1,55 +1,33 @@
-const minimist = require('minimist'),
-    path = require('path'),
-    gulp = require('gulp'),
-    del = require('del'),
-    zip = require('gulp-zip'),
-    concat = require('gulp-concat'),
-    cssnano = require('gulp-cssnano'),
-    connect = require('gulp-connect'),
-    BundleHelper = require('maptalks-build-helpers').BundleHelper,
-    package = require('./package.json');
+const gulp = require('gulp'),
+    pkg = require('./package.json'),
+    BundleHelper = require('maptalks-build-helpers').BundleHelper;
+const bundleHelper = new BundleHelper(pkg);
 
-const bundler = new BundleHelper(package);
-
-const knownOptions = {
-    string: ['browsers', 'pattern'],
-    boolean: 'coverage',
-    alias: {
-        'coverage': 'cov'
-    },
-    default: {
-        browsers: null,
-        coverage: false
-    }
-};
-
-const options = minimist(process.argv.slice(2), knownOptions);
-
-const browsers = [];
-
-const configBrowsers = options.browsers || process.env['MAPTALKS_BROWSERS'] || '';
-configBrowsers.split(',').forEach(name => {
-    if (!name || name.length < 1) {
-        return;
-    }
-    browsers.push(name);
+gulp.task('build', () => {
+    return bundleHelper.bundle('index.js');
 });
-
-gulp.task('scripts', () => {
-    return bundler.bundle('index.js');
-});
-
-gulp.task('build', ['scripts'], () => {});
 
 gulp.task('minify', ['build'], () => {
-    bundler.minify();
+    bundleHelper.minify();
 });
 
-
-gulp.task('reload', ['scripts'], () => {
-    gulp.src('./dist/*.js')
-        .pipe(connect.reload());
+gulp.task('watch', ['build'], () => {
+    gulp.watch(['index.js', './gulpfile.js'], ['build']);
 });
 
-gulp.task('default', ['build']);
+/* 
+const TestHelper = require('maptalks-build-helpers').TestHelper;
+const testHelper = new TestHelper();
+const karmaConfig = require('./karma.config.js');
 
+gulp.task('test', ['build'], () => {
+    testHelper.test(karmaConfig);
+});
+
+gulp.task('tdd', ['build'], () => {
+    karmaConfig.singleRun = false;
+    gulp.watch(['index.js'], ['test']);
+    testHelper.test(karmaConfig);
+}); */
+
+gulp.task('default', ['watch']);

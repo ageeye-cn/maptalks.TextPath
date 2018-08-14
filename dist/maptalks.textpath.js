@@ -1,13 +1,24 @@
 /*!
- * maptalks.textPath v0.1.0
+ * maptalks.textpath v0.1.0
  * LICENSE : MIT
  * (c) 2016-2018 maptalks.org
+ */
+/*!
+ * requires maptalks@>=0.40.0 
  */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('maptalks')) :
 	typeof define === 'function' && define.amd ? define(['exports', 'maptalks'], factory) :
 	(factory((global.maptalks = global.maptalks || {}),global.maptalks));
 }(this, (function (exports,maptalks) { 'use strict';
+
+function _defaults(obj, defaults) { var keys = Object.getOwnPropertyNames(defaults); for (var i = 0; i < keys.length; i++) { var key = keys[i]; var value = Object.getOwnPropertyDescriptor(defaults, key); if (value && value.configurable && obj[key] === undefined) { Object.defineProperty(obj, key, value); } } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : _defaults(subClass, superClass); }
 
 // https://github.com/Viglino/Canvas-TextPath
 /** Render text along a path in a Canvas
@@ -100,7 +111,7 @@
 		// Remove char for overflow
 		if (this.textOverflow != "visible") {
 			if (d < this.measureText(text).width + (text.length - 1 + nbspace) * letterPadding) {
-				var overflow = this.textOverflow == "ellipsis" ? '\u2026' : this.textOverflow || "";
+				var overflow = this.textOverflow == "ellipsis" ? "\u2026" : this.textOverflow || "";
 				var dt = overflow.length - 1;
 				do {
 					if (text[text.length - 1] === " ") nbspace--;
@@ -160,7 +171,7 @@ function isSamePoint(pt1, pt2) {
 
 // remove duplicate adjacent point 
 function delDuplicatePt(pts) {
-	let i = 0;
+	var i = 0;
 
 	while (i < pts.length - 1) {
 		if (isSamePoint(pts[i], pts[i + 1])) {
@@ -173,9 +184,9 @@ function delDuplicatePt(pts) {
 	return pts;
 }
 
-const originPaintOn = maptalks.LineString.prototype._paintOn;
+var originPaintOn = maptalks.LineString.prototype._paintOn;
 
-const options = {
+var options = {
 	fontSize: "48px",
 	fontFamily: "Arial",
 	textJustify: true,
@@ -184,45 +195,50 @@ const options = {
 	textStrokeMin: 5
 };
 
-class TextPath extends maptalks.LineString {
-	_paintOn(ctx, points, lineOpacity, fillOpacity, dasharray) {
-		delDuplicatePt(points); //  paint smoothline error when adjacent-points duplicate
-		if (this.options['textName']) {
-			let fontSize = this.options["fontSize"];
-			if (this.options["fontSize"].indexOf("px") != -1) {
-				fontSize = this.options["fontSize"];
-			} else if (this.options["fontSize"].indexOf("m") != -1) {
-				const index = this.options["fontSize"].indexOf("m");
-				const size = parseFloat(this.options["fontSize"].substring(0, index));
-				const scale = this.getMap().getScale();
-				fontSize = size / scale;
-				if (fontSize < this.options['textStrokeMin']) return;
-				fontSize += "px";
-			}
+var TextPath = function (_LineString) {
+	_inherits(TextPath, _LineString);
 
-			const font = fontSize + " " + this.options["fontFamily"];
-			this._paintPolylineTextPath(ctx, points, this.options['textName'], font, this.options["symbol"]['lineColor'], this.options["symbol"]['lineWidth'], lineOpacity);
+	function TextPath() {
+		_classCallCheck(this, TextPath);
+
+		return _possibleConstructorReturn(this, _LineString.apply(this, arguments));
+	}
+
+	TextPath.prototype._paintOn = function _paintOn(ctx, points, lineOpacity, fillOpacity, dasharray) {
+		//  paint smoothline error when adjacent-points duplicate
+
+		var symbol = this.getSymbol();
+
+		if (symbol && symbol['textPathSize']) {
+			delDuplicatePt(points);
+
+			var scale = this.getMap().getScale();
+			var fontSize = parseInt(symbol['textPathSize'] / scale);
+			if (fontSize < 3 || fontSize > 1000) return;
+			fontSize += "px";
+
+			var font = fontSize + " " + this.options["fontFamily"];
+			this._paintPolylineTextPath(ctx, points, this.options['textName'], font, this.options["symbol"]['lineWidth'], lineOpacity);
 		} else {
 			originPaintOn.apply(this, arguments);
 		}
-	}
+	};
 
-	_paintPolylineTextPath(ctx, points, text, font, lineColor, lineWidth, lineOpacity) {
+	TextPath.prototype._paintPolylineTextPath = function _paintPolylineTextPath(ctx, points, text, font, lineColor, lineOpacity) {
 		// Render text
 		ctx.font = font;
-		ctx.strokeStyle = lineColor;
-		ctx.lineWidth = lineWidth || 3;
+		ctx.strokeStyle = 'rgba(0,0,0,0)';
+		ctx.lineWidth = 0;
 		ctx.globalAlpha = lineOpacity;
 
-		ctx.textAlign = this.options['textAlign'];
-		ctx.textBaseline = this.options['textBaseline'];
-		ctx.textOverflow = this.options['textOverflow'];
-		ctx.textJustify = this.options['textJustify'];
-		ctx.textStrokeMin = this.options['textStrokeMin'];
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.textOverflow = "visible";
+		ctx.textJustify = true;
 
-		let path = [];
-		let len = points.length;
-		for (let i = 0; i < len; i++) {
+		var path = [];
+		var len = points.length;
+		for (var i = 0; i < len; i++) {
 			path.push(points[i].x);
 			path.push(points[i].y);
 		}
@@ -231,9 +247,10 @@ class TextPath extends maptalks.LineString {
 		ctx.moveTo(path[0], path[1]);
 		ctx.textPath(text, path);
 		maptalks.Canvas._stroke(ctx, lineOpacity);
-	}
+	};
 
-}
+	return TextPath;
+}(maptalks.LineString);
 
 TextPath.mergeOptions(options);
 
@@ -244,6 +261,6 @@ exports['default'] = TextPath;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-typeof console !== 'undefined' && console.log('maptalks.textPath v0.1.0');
+typeof console !== 'undefined' && console.log('maptalks.textpath v0.1.0, requires maptalks@>=0.40.0.');
 
 })));
