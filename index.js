@@ -282,60 +282,60 @@ const options = {
 	textStrokeMin: 5
 }
 
-export class TextPath extends LineString {
-	_paintOn(ctx, points, lineOpacity, fillOpacity, dasharray) {
-	//  paint smoothline error when adjacent-points duplicate
+LineString.include({
+        _paintOn(ctx, points, lineOpacity, fillOpacity, dasharray) {
+            //  paint smoothline error when adjacent-points duplicate
 
-		const symbol = this.getSymbol()
+            const symbol = this.getSymbol()
 
-		if (symbol && symbol['textPathSize']){
-            delDuplicatePt(points);
+            if (symbol && symbol['textPathSize']){
+                delDuplicatePt(points);
 
-            const scale = this.getMap().getScale();
-            let fontSize = parseInt(symbol['textPathSize']/scale);
-			if(fontSize < 3 || fontSize > 1000) return;
-			fontSize += "px";
+                const scale = this.getMap().getScale();
+                let fontSize = parseInt(symbol['textPathSize']/scale);
+                if(fontSize < 3 || fontSize > 1000) return;
+                fontSize += "px";
 
-			const font = fontSize + " " + this.options["fontFamily"];
-			this._paintPolylineTextPath(ctx, points, this.options['textName'], font,
-				this.options["symbol"]['lineWidth'],
-				lineOpacity
-			);
-		}
-		else{
-			originPaintOn.apply(this, arguments);
-		}
+                const font = fontSize + " " + this.options["fontFamily"];
+                this._paintPolylineTextPath(ctx, points, this.options['textName'], font,
+                    this.options["symbol"]['lineWidth'],
+                    lineOpacity
+                );
+            }
+            else{
+                originPaintOn.apply(this, arguments);
+            }
+        },
+
+        _paintPolylineTextPath(ctx, points, text, font,	lineColor, lineOpacity){
+            // Render text
+            ctx.font = font;
+            ctx.strokeStyle = 'rgba(0,0,0,0)';
+            ctx.lineWidth = 0;
+            ctx.globalAlpha = lineOpacity;
+
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.textOverflow = "visible";
+            ctx.textJustify = true;
+
+            let path = [];
+            let len = points.length;
+            for(let i=0; i<len; i++){
+                path.push(points[i].x);
+                path.push(points[i].y);
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(path[0],path[1]);
+            ctx.textPath (text, path);
+            Canvas._stroke(ctx, lineOpacity);
+        }
+
     }
-	
-	_paintPolylineTextPath(ctx, points, text, font,	lineColor, lineOpacity){
-		// Render text
-		ctx.font = font;
-		ctx.strokeStyle = 'rgba(0,0,0,0)';
-		ctx.lineWidth = 0;
-		ctx.globalAlpha = lineOpacity;
-		
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-		ctx.textOverflow = "visible";
-		ctx.textJustify = true;
-
-		let path = [];
-		let len = points.length;
-		for(let i=0; i<len; i++){
-			path.push(points[i].x);
-			path.push(points[i].y);
-		}
-		
-		ctx.beginPath();
-        ctx.moveTo(path[0],path[1]);
-		ctx.textPath (text, path);
-		Canvas._stroke(ctx, lineOpacity);
-	}
-
-}
-
-TextPath.mergeOptions(options);
-
-TextPath.registerJSONType('TextPath');
-
-export default TextPath;
+)
+// TextPath.mergeOptions(options);
+//
+// TextPath.registerJSONType('TextPath');
+//
+// export default TextPath;

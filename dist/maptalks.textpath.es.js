@@ -8,14 +8,6 @@
  */
 import { Canvas, LineString } from 'maptalks';
 
-function _defaults(obj, defaults) { var keys = Object.getOwnPropertyNames(defaults); for (var i = 0; i < keys.length; i++) { var key = keys[i]; var value = Object.getOwnPropertyDescriptor(defaults, key); if (value && value.configurable && obj[key] === undefined) { Object.defineProperty(obj, key, value); } } return obj; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : _defaults(subClass, superClass); }
-
 // https://github.com/Viglino/Canvas-TextPath
 /** Render text along a path in a Canvas
 *	Adds extra functionality to the CanvasRenderingContext2D by extending its prototype.
@@ -182,25 +174,8 @@ function delDuplicatePt(pts) {
 
 var originPaintOn = LineString.prototype._paintOn;
 
-var options = {
-	fontSize: "48px",
-	fontFamily: "Arial",
-	textJustify: true,
-	textOverflow: "visible",
-	textBaseline: "middle",
-	textStrokeMin: 5
-};
-
-var TextPath = function (_LineString) {
-	_inherits(TextPath, _LineString);
-
-	function TextPath() {
-		_classCallCheck(this, TextPath);
-
-		return _possibleConstructorReturn(this, _LineString.apply(this, arguments));
-	}
-
-	TextPath.prototype._paintOn = function _paintOn(ctx, points, lineOpacity, fillOpacity, dasharray) {
+LineString.include({
+	_paintOn: function _paintOn(ctx, points, lineOpacity, fillOpacity, dasharray) {
 		//  paint smoothline error when adjacent-points duplicate
 
 		var symbol = this.getSymbol();
@@ -218,9 +193,8 @@ var TextPath = function (_LineString) {
 		} else {
 			originPaintOn.apply(this, arguments);
 		}
-	};
-
-	TextPath.prototype._paintPolylineTextPath = function _paintPolylineTextPath(ctx, points, text, font, lineColor, lineOpacity) {
+	},
+	_paintPolylineTextPath: function _paintPolylineTextPath(ctx, points, text, font, lineColor, lineOpacity) {
 		// Render text
 		ctx.font = font;
 		ctx.strokeStyle = 'rgba(0,0,0,0)';
@@ -243,16 +217,12 @@ var TextPath = function (_LineString) {
 		ctx.moveTo(path[0], path[1]);
 		ctx.textPath(text, path);
 		Canvas._stroke(ctx, lineOpacity);
-	};
-
-	return TextPath;
-}(LineString);
-
-TextPath.mergeOptions(options);
-
-TextPath.registerJSONType('TextPath');
-
-export { TextPath };
-export default TextPath;
+	}
+});
+// TextPath.mergeOptions(options);
+//
+// TextPath.registerJSONType('TextPath');
+//
+// export default TextPath;
 
 typeof console !== 'undefined' && console.log('maptalks.textpath v0.1.0, requires maptalks@>=0.40.0.');
